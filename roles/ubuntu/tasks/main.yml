@@ -3,40 +3,129 @@
 - name: install pre-req
   apt:
     name:
-      - opendjk-11-jdk
+      - openjdk-11-jdk
     state: latest
 
   when: ansible_distribution == "Ubuntu"
 
 - name: add elasticsearch apt key
   apt_key:
-    url: "https://packages.elastic.co/GPG-Key-elasticsearch"
+    url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
     state: present
   when: ansible_distribution == "Ubuntu"
 
 - name: adding elastic repo
   apt_repository:
-     repo: deb https://artifacts.elastic.co/packages/5.x/apt stable main
+    repo: deb https://artifacts.elastic.co/packages/5.x/apt stable main
   when: ansible_distribution == "Ubuntu"
 
 - name: install elasticsearch
   apt:
     name: elasticsearch
     update_cache: yes
-    masked: no
   when: ansible_distribution == "Ubuntu"
 
 - name: allow outside access elasticsearch (Ubuntu)
-  apt:
+  lineinfile:
     dest: /etc/elasticsearch/elasticsearch.yml
     regexp: 'network.host:'
     line: 'network.host: 0.0.0.0'
     state: present
-  when: ansible_distribution == "ubuntu"
+  when: ansible_distribution == "Ubuntu"
+
+- name: update port in config file
+  lineinfile:
+    dest: /etc/elasticsearch/elasticsearch.yml
+    line: 'http.port:9200'
+    state: present
+  when: ansible_distribution == "Ubuntu"
 
 - name: enable elasticsearch
   service:
     name: elasticsearch
     enabled: yes
+    masked: no
+  when: ansible_distribution == "Ubuntu"
+
+- name: install kibana (Ubuntu)
+  apt:
+    name: kibana
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: allow outside access Kibana (Ubuntu)
+  lineinfile:
+    dest: /etc/kibana/kibana.yml
+    regexp: 'server.host'
+    line: 'server.hosts: 0.0.0.0'
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: def server port (Ubuntu)
+  lineinfile:
+    dest: /etc/kibana/kibana.yml
+    regexp: 'server.port:'
+    line: 'server.port: 5601'
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: def elastic URL
+  lineinfile:
+    dest: /etc/kibana/kibana.yml
+    regexp: 'elasticsearch.url'
+    line: 'elasticsearch.url: "http://localhost:9200:"'
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: enable kibana
+  systemd:
+    name: kibana
+    enabled: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: install logstash (Ubuntu)
+  apt:
+    name: logstash
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: Run daemon-reload for logstash (Ubuntu)
+  systemd: daemon_reload=yes
+  when: ansible_distribution == "Ubuntu"
+
+
+- name: install nagios (Ubuntu)
+  apt:
+    name:
+      - nagios4
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: install nagios (CentOS)
+  dnf:
+    name:
+      - nagios
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "CentOS"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
